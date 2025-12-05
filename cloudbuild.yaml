@@ -53,7 +53,7 @@ steps:
           --platform "managed" \
           --allow-unauthenticated \
           --service-account "toolbox-identity@$PROJECT_ID.iam.gserviceaccount.com" \
-          --set-secrets "/app/librechat.yaml=$SECRET_YAML:latest,/app/.env=$SECRET_ENV:latest" \
+          --set-secrets "/app/librechat.yaml=$$SECRET_YAML:latest,/app/.env=$$SECRET_ENV:latest" \
           --timeout "1200s" \
           --labels "branch=${BRANCH_NAME},commit=${SHORT_SHA}" \
           --cpu=1 \
