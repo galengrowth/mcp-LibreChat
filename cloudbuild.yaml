@@ -42,30 +42,29 @@ steps:
       - '-c'
       - |
         set -e
-
-        # Select service and secret by branch
+        
+        # Select service and secrets by branch using substitutions
         if [ "${BRANCH_NAME}" = "dev" ]; then
           SERVICE_NAME="${_SERVICE_DEV}"
-          SECRET_NAME_YAML="${_SECRET_DEV_YAML}"
-          SECRET_NAME_ENV="${_SECRET_DEV_ENV}"
+          SECRET_YAML="${_SECRET_DEV_YAML}"
+          SECRET_ENV="${_SECRET_DEV_ENV}"
         elif [ "${BRANCH_NAME}" = "stage" ]; then
           SERVICE_NAME="${_SERVICE_STAGE}"
-          SECRET_NAME_YAML="${_SECRET_STAGE_YAML}"
-          SECRET_NAME_ENV="${_SECRET_STAGE_ENV}"
+          SECRET_YAML="${_SECRET_STAGE_YAML}"
+          SECRET_ENV="${_SECRET_STAGE_ENV}"
         elif [ "${BRANCH_NAME}" = "master" ] || [ "${BRANCH_NAME}" = "main" ]; then
           SERVICE_NAME="${_SERVICE_PROD}"
-          SECRET_NAME_YAML="${_SECRET_PROD_YAML}"
-          SECRET_NAME_ENV="${_SECRET_PROD_ENV}"
+          SECRET_YAML="${_SECRET_PROD_YAML}"
+          SECRET_ENV="${_SECRET_PROD_ENV}"
         else
-          echo "ERROR: Unsupported branch ${BRANCH_NAME}";
+          echo "ERROR: Unsupported branch ${BRANCH_NAME}"
           exit 1
         fi
 
         echo "Deploying to Cloud Run: ${SERVICE_NAME}"
-        echo "Using Secret Manager secrets: YAML=${SECRET_NAME_YAML}, ENV=${SECRET_NAME_ENV}"
+        echo "Using Secret Manager secrets: YAML=${SECRET_YAML}, ENV=${SECRET_ENV}"
 
-        # Deploy. Mount secrets as files for `librechat.yaml` and `.env`.
-        # Using separate secrets and pinning to :latest version.
+        # Deploy with both secrets mounted as files (single-line --set-secrets)
         gcloud run deploy "${SERVICE_NAME}" \
           --image "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:${BRANCH_NAME}-latest" \
           --region "${_REGION}" \
@@ -77,17 +76,7 @@ steps:
           --cpu=1 \
           --memory=1Gi \
           --port=3080 \
-          --set-secrets \
-            "/app/librechat.yaml=${SECRET_NAME_YAML}:latest" \
-            "/app/.env=${SECRET_NAME_ENV}:latest"
+          --set-secrets "/app/librechat.yaml=${SECRET_YAML}:latest,/app/.env=${SECRET_ENV}:latest" [web:10][web:14]
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:${BRANCH_NAME}-latest'
-
-# Notes:
-# - Create an Artifact Registry repo `${_REPOSITORY}` in `${_REGION}`.
-# - Create Secret Manager secret per environment (dev/stage/prod). Add secret versions with
-#   data entries named `librechat.yaml` and `.env` for file mounts as above.
-# - Ensure Cloud Run service account `librechat-identity@PROJECT_ID` has access to read secrets
-#   and invoke Cloud Run.
-# - Update Auth0 Allowed Callback/Web Origins to the Cloud Run URL.
