@@ -44,10 +44,10 @@ steps:
           exit 1
         fi
 
-        echo "Deploying to Cloud Run service: $SERVICE_NAME"
+        echo "Deploying to Cloud Run service: $$SERVICE_NAME"
         echo "Using secrets: YAML=$SECRET_YAML, ENV=$SECRET_ENV"
 
-        gcloud run deploy "$SERVICE_NAME" \
+         gcloud run deploy "$$SERVICE_NAME" \
           --image "us-central1-docker.pkg.dev/$PROJECT_ID/mcp-librechat/librechat-api:${BRANCH_NAME}-latest" \
           --region "us-central1" \
           --platform "managed" \
