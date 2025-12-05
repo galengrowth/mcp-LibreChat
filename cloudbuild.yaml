@@ -47,7 +47,7 @@ steps:
         echo "Deploying to Cloud Run service: $$SERVICE_NAME"
         echo "Using secrets: YAML=$$SECRET_YAML, ENV=$$SECRET_ENV"
 
-         gcloud run deploy "$$SERVICE_NAME" \
+        gcloud run deploy "$$SERVICE_NAME" \
           --image "us-central1-docker.pkg.dev/$PROJECT_ID/mcp-librechat/librechat-api:${BRANCH_NAME}-latest" \
           --region "us-central1" \
           --platform "managed" \
@@ -58,7 +58,7 @@ steps:
           --labels "branch=${BRANCH_NAME},commit=${SHORT_SHA}" \
           --cpu=1 \
           --memory=1Gi \
-          --port=3080 [web:10]
+          --port=3080
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/mcp-librechat/librechat-api:${BRANCH_NAME}-latest'
