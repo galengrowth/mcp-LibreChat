@@ -2,7 +2,6 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 require('module-alias')({ base: path.resolve(__dirname, '..') });
-const cors = require('cors');
 const axios = require('axios');
 const express = require('express');
 const passport = require('passport');
@@ -30,6 +29,7 @@ const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const { seedDatabase } = require('~/models');
 const routes = require('./routes');
+const { applyCorsAllowlist } = require('./custom/corsAllowlist');
 
 const { PORT, HOST, ALLOW_SOCIAL_LOGIN, DISABLE_COMPRESSION, TRUST_PROXY } = process.env ?? {};
 
@@ -84,7 +84,7 @@ const startServer = async () => {
   app.use(express.urlencoded({ extended: true, limit: '3mb' }));
   app.use(handleJsonParseError);
   app.use(mongoSanitize());
-  app.use(cors());
+  applyCorsAllowlist(app);
   app.use(cookieParser());
 
   if (!isEnabled(DISABLE_COMPRESSION)) {

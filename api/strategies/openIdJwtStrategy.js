@@ -1,4 +1,3 @@
-const cookies = require('cookie');
 const jwksRsa = require('jwks-rsa');
 const { logger } = require('@librechat/data-schemas');
 const { HttpsProxyAgent } = require('https-proxy-agent');
@@ -6,6 +5,7 @@ const { SystemRoles } = require('librechat-data-provider');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { isEnabled, findOpenIDUser } = require('@librechat/api');
 const { updateUser, findUser } = require('~/models');
+const { getRawBearerToken } = require('~/server/custom/auth/getRawBearerToken');
 
 /**
  * @function openIdJwtLogin
@@ -50,8 +50,7 @@ const openIdJwtLogin = (openIdConfig) => {
      */
     async (req, payload, done) => {
       try {
-        const authHeader = req.headers.authorization;
-        const rawToken = authHeader?.replace('Bearer ', '');
+        const rawToken = getRawBearerToken(req);
 
         const { user, error, migration } = await findOpenIDUser({
           findUser,
@@ -83,15 +82,10 @@ const openIdJwtLogin = (openIdConfig) => {
             await updateUser(user.id, updateData);
           }
 
-          const cookieHeader = req.headers.cookie;
-          const parsedCookies = cookieHeader ? cookies.parse(cookieHeader) : {};
-          const accessToken = parsedCookies.openid_access_token;
-          const refreshToken = parsedCookies.refreshToken;
-
           user.federatedTokens = {
-            access_token: accessToken || rawToken,
+            access_token: rawToken,
             id_token: rawToken,
-            refresh_token: refreshToken,
+            refresh_token: undefined,
             expires_at: payload.exp,
           };
 
